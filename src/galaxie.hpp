@@ -26,6 +26,8 @@ public:
 
     void swap(galaxie& g);
 
+    void updateWithData(std::vector<char> g_nextData);
+
 private:
     int m_width, m_height;
     std::vector<char> m_planetes;

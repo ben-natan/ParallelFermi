@@ -2,7 +2,7 @@
 #include Make_msys2.inc
 include Make_osx.inc
 
-CXXFLAGS = -std=c++14 `sdl2-config --cflags` -L/usr/local/include/SDL2
+CXXFLAGS = -std=c++14 `sdl2-config --cflags` -L/usr/local/include/SDL2 
 ifdef DEBUG
 CXXFLAGS += -g -O0 -Wall -fbounds-check -pedantic -D_GLIBCXX_DEBUG
 else

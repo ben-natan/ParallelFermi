@@ -1,3 +1,3 @@
-CC = g++-10 -fopenmp
-CXX = g++-10 -fopenmp
-LIB = -lpthread
+CC = mpicc
+CXX = mpic++
+LIB = -lpthread -lmpi

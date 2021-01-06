@@ -52,6 +52,12 @@ galaxie::swap(galaxie& g)
 {
     g.m_planetes.swap(this->m_planetes);
 }
+//_ ______________________________________________________________________________________________ _
+void
+galaxie::updateWithData(std::vector<char> data)
+{
+    m_planetes = data;
+}
 //# ############################################################################################## #
 galaxie_renderer::galaxie_renderer(SDL_Window* win)
 {

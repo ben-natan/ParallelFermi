@@ -61,7 +61,7 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
     
     memcpy(galaxie_next, galaxie_previous, width*height*sizeof(char));
 
-    #pragma omp parallel for collapse(2) shared(galaxie_next)
+    
     for ( i = 0; i < height; ++i )
       {
         for ( j = 0; j < width; ++j )
