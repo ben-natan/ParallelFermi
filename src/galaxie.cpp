@@ -58,6 +58,14 @@ galaxie::updateWithData(std::vector<char> data)
 {
     m_planetes = data;
 }
+//_ ______________________________________________________________________________________________ _
+void
+galaxie::replaceLine(std::vector<char> data, int line)
+{
+    for (int i=0; i<m_width; i++) {
+        m_planetes[line*m_height + i] = data[i];
+    }
+}
 //# ############################################################################################## #
 galaxie_renderer::galaxie_renderer(SDL_Window* win)
 {

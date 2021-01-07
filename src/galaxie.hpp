@@ -26,7 +26,8 @@ public:
 
     void swap(galaxie& g);
 
-    void updateWithData(std::vector<char> g_nextData);
+    void updateWithData(std::vector<char> data);
+    void replaceLine(std::vector<char> data, int line);
 
 private:
     int m_width, m_height;
