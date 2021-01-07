@@ -6,7 +6,7 @@ CXXFLAGS = -std=c++14 `sdl2-config --cflags` -L/usr/local/include/SDL2
 ifdef DEBUG
 CXXFLAGS += -g -O0 -Wall -fbounds-check -pedantic -D_GLIBCXX_DEBUG
 else
-CXXFLAGS += -O3 -march=native -Wall
+CXXFLAGS += -g -O2 -march=native -Wall
 endif
 
 LIBS = $(LIB) `sdl2-config --cflags` `sdl2-config --libs` -lSDL2_image

@@ -46,9 +46,9 @@ int main(int argc, char ** argv)
 
     int deltaT = (20*52840)/width;
 
-    if (rank == 0) {
-      
 
+    
+    if (rank == 0) {
       std::cout << "Resume des parametres (proba par pas de temps): " << std::endl;
       std::cout << "\t Chance apparition civilisation techno : " << param.apparition_civ << std::endl;
       std::cout << "\t Chance disparition civilisation techno: " << param.disparition << std::endl;
@@ -65,29 +65,24 @@ int main(int argc, char ** argv)
      
       std::cout << "Pas de temps : " << deltaT << " années" << std::endl;
       std::cout << std::endl; 
-    } 
-
-    galaxie_renderer gr(window);
-    galaxie g(width, height, param.apparition_civ);
-    galaxie g_next(width, height);
-
-    std::vector<char> g_nextData;
-    g_nextData.resize(height*width);
-
-    unsigned long long temps = 0;
 
 
-    std::chrono::time_point<std::chrono::system_clock> start, end;
-    while (1) {
-        
-        if (rank == 0) 
-        {
-          MPI_Status status;
+      galaxie g(width, height, param.apparition_civ);
+      galaxie g_next(width, height);
+      galaxie_renderer gr(window);
+
+      std::vector<char> g_nextData;
+      g_nextData.resize(height*width);
+
+      unsigned long long temps = 0;
+
+      std::chrono::time_point<std::chrono::system_clock> start, end;
+      while (1) 
+      {
+        MPI_Status status;
           start = std::chrono::system_clock::now();
           gr.render(g);
-          std::cout << "En attente de réception..." << std::endl;
-          MPI_Recv(&g_nextData[0], g_nextData.size(), MPI_CHAR, 1, 0, globComm, &status);
-          std::cout << "Reçu! " << std::endl;
+          MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, 1, 0, globComm, &status);
           g.updateWithData(g_nextData);
           end = std::chrono::system_clock::now();
 
@@ -104,26 +99,31 @@ int main(int argc, char ** argv)
             std::cout << std::endl << "The end" << std::endl;
             break;
           }
-        } // (if)
-          else 
-        {
-          mise_a_jour(param, width, height, g.data(), g_next.data());
-          for (int i = 0; i < width*height; i++) {
-            g_nextData[i] = g_next.data()[i];
-            std::cout << g_nextData[i] << std::endl;
-          }
-          std::cout << "On va envoyer..." << std::endl;
-          MPI_Ssend(&g_nextData[0], g_nextData.size(), MPI_CHAR, 0, 0, globComm);
-          std::cout << "Contenu envoyé!" << std::endl;
-        } // (else)
+      } //(while)
 
-    } // (while)
-
-    if (rank == 0) {
       SDL_DestroyWindow(window);
       SDL_Quit();
-    }
 
-    MPI_Finalize();
-    return EXIT_SUCCESS;
+      MPI_Finalize();
+      return EXIT_SUCCESS;
+
+    } //(rank 0)
+    else 
+    {
+        galaxie g(width, height, param.apparition_civ);
+        galaxie g_next(width, height);
+
+        std::vector<char> g_nextData;
+        g_nextData.resize(height*width);
+
+        while (1) {
+          mise_a_jour(param, width, height, g.data(), g_next.data());
+          g.swap(g_next);
+          MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 0, 0, globComm);
+        }
+
+        MPI_Finalize();
+        return EXIT_SUCCESS;
+
+    } //(autres rank)
 }
