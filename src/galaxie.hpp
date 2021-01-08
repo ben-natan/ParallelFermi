@@ -28,6 +28,7 @@ public:
 
     void updateWithData(std::vector<char> data);
     void replaceLine(std::vector<char> data, int line);
+    void updateByHBlocks(std::vector<char> data, int block, int nbp);
 
 private:
     int m_width, m_height;

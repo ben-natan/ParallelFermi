@@ -66,7 +66,34 @@ galaxie::replaceLine(std::vector<char> data, int line)
         m_planetes[line*m_height + i] = data[i];
     }
 }
+//_ ______________________________________________________________________________________________ _
+void 
+galaxie::updateByHBlocks(std::vector<char> data, int block, int nbp) 
+{
+    int taskH  = (m_height/ (nbp-1)) +2;
+    if (block == 1) {
+        for (int i = 0; i < (taskH-1)*m_width; i++) {
+            m_planetes[i] = data[i+m_width];    // validé
+        }
+    } else if (block == nbp-1) {
+        for (int i = 0; i < (taskH-1)*m_width; i++) {
+            m_planetes[(m_height-(taskH-2))*m_width + i] = data[i];
+        }
+    } else { // N'est pas correct ----
+        for (int i = 0; i < m_width; i++) {
+            m_planetes[(block-1)*(taskH-2)*m_width - m_width + i] = data[i];
+        };
+        for (int i = 0; i < m_width; i++) {
+            m_planetes[block*(taskH-2)*m_width + m_width + i] = data[(taskH-1)*m_width + i];
+        }
+        for (int i = 0; i < (taskH-4)*m_width; i++) {
+            m_planetes[(block-1)*(taskH-2)*m_width + m_width + i] = data[2*m_width +i];
+        };
+    }
+}
+
 //# ############################################################################################## #
+
 galaxie_renderer::galaxie_renderer(SDL_Window* win)
 {
     m_renderer = SDL_CreateRenderer(win, -1, 0);

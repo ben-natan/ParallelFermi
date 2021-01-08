@@ -45,7 +45,8 @@ int main(int argc, char ** argv)
     fich.close();
 
     int deltaT = (20*52840)/width;
-
+    // On coupe horizontalement
+    int taskH = (height/ (nbp-1)) +2;
 
     
     if (rank == 0) {
@@ -74,16 +75,21 @@ int main(int argc, char ** argv)
       std::vector<char> g_nextData;
       g_nextData.resize(height*width);
 
+      std::vector<char> g_nextBuffer;
+      g_nextBuffer.resize(taskH*width);
+
       unsigned long long temps = 0;
 
       std::chrono::time_point<std::chrono::system_clock> start, end;
       while (1) 
       {
-        MPI_Status status;
+          MPI_Status status;
           start = std::chrono::system_clock::now();
           gr.render(g);
-          MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, 1, 0, globComm, &status);
-          g.updateWithData(g_nextData);
+          for (int i=1; i<nbp; i++) {
+            MPI_Recv(g_nextBuffer.data(), g_nextBuffer.size(), MPI_CHAR, i, 0, globComm, &status);
+            g.updateByHBlocks(g_nextBuffer, i, nbp);
+          }
           end = std::chrono::system_clock::now();
 
           std::chrono::duration<double> elaps = end - start;
@@ -110,9 +116,6 @@ int main(int argc, char ** argv)
     } //(rank 0)
     else 
     {
-        // On coupe horizontalement
-        int taskH = (height/ (nbp-1)) +2;
-
         galaxie g(width, taskH, param.apparition_civ);
         galaxie g_next(width, taskH);
 
@@ -122,41 +125,42 @@ int main(int argc, char ** argv)
         while (1) {
           mise_a_jour(param, width, taskH, g.data(), g_next.data());
 
+          MPI_Status status;
           // ATTENTION AU DEADLOCK ( évités avec le % 2 )
           if (rank == 1) {
             MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 2, 0, globComm); // au rank 2 
-            MPI_Recv(g_nextData, g_nextData.size(), MPI_CHAR, 2, 0, globComm);
+            MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, 2, 0, globComm, &status);
 
             g_next.replaceLine(g_nextData,taskH - 2);
           } else if (rank == nbp-1) {
-            if (rank % 2 == 0) {
-              MPI_Recv(g_nextData, g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm);
+            if (rank % 2 == 1) {
+              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm, &status);
               MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm); // au rank nbp-2
             } else {
               MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm); // au rank nbp-2
-              MPI_Recv(g_nextData, g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm);
+              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm, &status);
             }
 
             g_next.replaceLine(g_nextData, 1);
           } else {
-            if (rank % 2 == 0) {
-              MPI_Recv(g_nextData, g_nextData.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
+            if (rank % 2 == 1) {
+              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank-1, 0, globComm, &status); // rank n - 1
               MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
-              MPI_Recv(g_nextData, g_nextData.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
+              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
               MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
             } else {
               MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
-              MPI_Recv(g_nextData, g_nextData.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
+              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank-1, 0, globComm, &status); // rank n - 1
               MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
-              MPI_Recv(g_nextData, g_nextData.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
+              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
             }
 
             g_next.replaceLine(g_nextData, taskH -2);
             g_next.replaceLine(g_nextData, 1);
           }
 
-          // MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 0, 0, globComm);
-          MPI_Gather(g_next.data(), g_nextData.size(), g_nextData.data(), width*height, MPI_CHAR, 0, globComm) // Mettre aussi le gather dans le rank 0
+          MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 0, 0, globComm);
+          // MPI_Gather(g_next.data(), g_nextData.size(), g_nextData.data(), width*height, MPI_CHAR, 0, globComm) // Mettre aussi le gather dans le rank 0
           g.swap(g_next);
         }
 
