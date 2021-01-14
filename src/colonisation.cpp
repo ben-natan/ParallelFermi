@@ -155,10 +155,10 @@ int main(int argc, char ** argv)
               MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
             }
 
-            g_next.replaceLine(g_nextData, taskH -2);
+            g_next.replaceLine(g_nextData, taskH -3);
             g_next.replaceLine(g_nextData, 1);
           }
-
+          
           MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 0, 0, globComm);
           // MPI_Gather(g_next.data(), g_nextData.size(), g_nextData.data(), width*height, MPI_CHAR, 0, globComm) // Mettre aussi le gather dans le rank 0
           g.swap(g_next);
