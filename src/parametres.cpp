@@ -4,10 +4,13 @@
 #include <iostream>
 #include "galaxie.hpp"
 #include "parametres.hpp"
+#include <omp.h>
+#include <chrono>
 
-expansion calcul_expansion(const parametres& c)
+
+expansion calcul_expansion(const parametres& c, unsigned int * seed)
 {
-    double val = std::rand()/(1.*RAND_MAX);
+    double val = rand_r(seed)/(1.*RAND_MAX);
     if (val < 0.01*c.expansion)     // parmi c.expansion, on a 1% de chance d'expansion isotrope...
         return expansion_isotrope;
     if (val < c.expansion)          // ... et 99% de chance d'expansion dans 1 seule direction
@@ -15,25 +18,25 @@ expansion calcul_expansion(const parametres& c)
     return pas_d_expansion;
 }
 //_ ______________________________________________________________________________________________ _
-bool calcul_depeuplement(const parametres& c)
+bool calcul_depeuplement(const parametres& c, unsigned int * seed)
 {
-    double val = std::rand()/(1.*RAND_MAX);
+    double val = rand_r(seed)/(1.*RAND_MAX);
     if (val < c.disparition)
         return true;
     return false;   
 }
 //_ ______________________________________________________________________________________________ _
-bool calcul_inhabitable(const parametres& c)
+bool calcul_inhabitable(const parametres& c, unsigned int * seed)
 {
-    double val = std::rand()/(1.*RAND_MAX);
+    double val = rand_r(seed)/(1.*RAND_MAX);
     if (val < c.inhabitable)
         return true;
     return false;
 }
 //_ ______________________________________________________________________________________________ _
-bool apparition_technologie(const parametres& p)
+bool apparition_technologie(const parametres& p, unsigned int * seed)
 {
-    double val = std::rand()/(1.*RAND_MAX);
+    double val = rand_r(seed)/(1.*RAND_MAX);
     if (val < p.apparition_civ)
         return true;
     return false;
@@ -61,7 +64,12 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
     
     memcpy(galaxie_next, galaxie_previous, width*height*sizeof(char));
 
-    #pragma omp parallel for collapse(2) shared(galaxie_next)
+    #pragma omp parallel private (i,j) num_threads(4)
+    {
+
+    unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count()+12345*omp_get_thread_num();
+
+    #pragma omp for 
     for ( i = 0; i < height; ++i )
       {
         for ( j = 0; j < width; ++j )
@@ -70,7 +78,7 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
             {
                 if ( a_un_systeme_proche_colonisable(i, j, width, height, galaxie_previous) )
                 {
-                    expansion e = calcul_expansion(params);
+                    expansion e = calcul_expansion(params, &seed);
                     if (e == expansion_isotrope)
                     {
                       if ( (i > 0) && (galaxie_previous[(i-1)*width+j] != inhabitable) )
@@ -96,7 +104,7 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
                         int ok = 0;
                         do
                         {
-                            int dir = std::rand()%4;
+                            int dir = rand_r(&seed)%4;
                             if ( (i>0) && (0 == dir) && (galaxie_previous[(i-1)*width+j] != inhabitable) )
                             {
                                 galaxie_next[(i-1)*width+j] = habitee;
@@ -120,18 +128,18 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
                         } while (ok == 0);
                     }// End if (e == expansion_unique)
                 }// Fin si il y a encore un monde non habite et habitable
-                if (calcul_depeuplement(params))
+                if (calcul_depeuplement(params, &seed))
                 {
                     galaxie_next[i*width+j] = habitable;
                 }
-                if (calcul_inhabitable(params))
+                if (calcul_inhabitable(params, &seed))
                 {
                     galaxie_next[i*width+j] = inhabitable;
                 }
             }  // Fin si habitee
             else if (galaxie_previous[i*width+j] == habitable)
             {
-                if (apparition_technologie(params))
+                if (apparition_technologie(params, &seed))
                     galaxie_next[i*width+j] = habitee;
             }
             else { // inhabitable
@@ -140,6 +148,7 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
             // if (galaxie_previous...)
         }// for (j)
       }// for (i)
+    }// pragma
 
 }
 //_ ______________________________________________________________________________________________ _
