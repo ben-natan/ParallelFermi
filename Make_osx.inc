@@ -1,3 +1,3 @@
-CC = mpicc
-CXX = mpic++
+CC = mpicc -fopenmp
+CXX = mpic++ -fopenmp
 LIB = -lpthread -lmpi
