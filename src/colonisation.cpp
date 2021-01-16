@@ -80,6 +80,9 @@ int main(int argc, char ** argv)
 
       unsigned long long temps = 0;
 
+      int iterations = 0;
+      float total = 0.0;
+
       std::chrono::time_point<std::chrono::system_clock> start, end;
       while (1) 
       {
@@ -93,12 +96,16 @@ int main(int argc, char ** argv)
           end = std::chrono::system_clock::now();
 
           std::chrono::duration<double> elaps = end - start;
+
+          iterations++;
+          total += elaps.count() * 1000;
           
           temps += deltaT;
           std::cout << "Temps passe : "
                     << std::setw(10) << temps << " années" 
                     << std::fixed << std::setprecision(3)
                     << "  " << "|  CPU(ms) :  " << elaps.count()*1000
+                    << "  " << " Moyenne : " << total/iterations
                     << "\r" << std::flush;
           //_sleep(1000);
           if (SDL_PollEvent(&event) && event.type == SDL_QUIT) {
@@ -155,7 +162,7 @@ int main(int argc, char ** argv)
               MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
             }
 
-            g_next.replaceLine(g_nextData, taskH -2);
+            g_next.replaceLine(g_nextData, taskH -3);
             g_next.replaceLine(g_nextData, 1);
           }
 
