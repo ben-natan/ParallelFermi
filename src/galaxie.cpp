@@ -90,6 +90,8 @@ galaxie::updateByHBlocks(std::vector<char> data, int block, int nbp)
             m_planetes[(block-1)*(taskH-2)*m_width + m_width + i] = data[2*m_width +i];
         };
     }
+
+    // ---- POUR L'AUTRE METHODE ----
     // int taskH = (m_height/(nbp-1)) + 2;
     // if (block == 1) {
     //     for (int i = 0; i < (taskH-2)*m_width; i++) {
