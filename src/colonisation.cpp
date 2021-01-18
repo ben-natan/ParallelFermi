@@ -45,6 +45,7 @@ int main(int argc, char ** argv)
     fich.close();
 
     int deltaT = (20*52840)/width;
+
     // On coupe horizontalement
     int taskH = (height/ (nbp-1)) +2;
 
@@ -166,8 +167,10 @@ int main(int argc, char ** argv)
             g_next.replaceLine(g_nextData, 1);
           }
 
-          MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 0, 0, globComm);
+          
           // MPI_Gather(g_next.data(), g_nextData.size(), g_nextData.data(), width*height, MPI_CHAR, 0, globComm) // Mettre aussi le gather dans le rank 0
+          
+          MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 0, 0, globComm);
           g.swap(g_next);
         }
 

@@ -7,6 +7,7 @@
 #include <omp.h>
 #include <chrono>
 
+
 expansion calcul_expansion(const parametres& c, unsigned int * seed)
 {
     double val = rand_r(seed)/(1.*RAND_MAX);
@@ -66,6 +67,7 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
     #pragma omp parallel private (i,j) num_threads(4)
     {
     
+    // Seed pour chaque thread
     unsigned int seed = std::chrono::system_clock::now().time_since_epoch().count()+12345*omp_get_thread_num();
 
     #pragma omp for 
@@ -77,7 +79,7 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
             {
                 if ( a_un_systeme_proche_colonisable(i, j, width, height, galaxie_previous) )
                 {
-                    expansion e = calcul_expansion(params, &seed);
+                    expansion e = calcul_expansion(params, &seed);  // seed utilisée
                     if (e == expansion_isotrope)
                     {
                       if ( (i > 0) && (galaxie_previous[(i-1)*width+j] != inhabitable) )
@@ -103,7 +105,7 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
                         int ok = 0;
                         do
                         {
-                            int dir = rand_r(&seed)%4;
+                            int dir = rand_r(&seed)%4; // seed utilisée
                             if ( (i>0) && (0 == dir) && (galaxie_previous[(i-1)*width+j] != inhabitable) )
                             {
                                 galaxie_next[(i-1)*width+j] = habitee;
@@ -127,18 +129,18 @@ mise_a_jour(const parametres& params, int width, int height, const char* galaxie
                         } while (ok == 0);
                     }// End if (e == expansion_unique)
                 }// Fin si il y a encore un monde non habite et habitable
-                if (calcul_depeuplement(params, &seed))
+                if (calcul_depeuplement(params, &seed))  // seed utilisée
                 {
                     galaxie_next[i*width+j] = habitable;
                 }
-                if (calcul_inhabitable(params, &seed))
+                if (calcul_inhabitable(params, &seed))   // seed utilisée
                 {
                     galaxie_next[i*width+j] = inhabitable;
                 }
             }  // Fin si habitee
             else if (galaxie_previous[i*width+j] == habitable)
             {
-                if (apparition_technologie(params, &seed))
+                if (apparition_technologie(params, &seed))   // seed utilisée
                     galaxie_next[i*width+j] = habitee;
             }
             else { // inhabitable
