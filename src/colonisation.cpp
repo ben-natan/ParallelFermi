@@ -45,7 +45,8 @@ int main(int argc, char ** argv)
     fich.close();
 
     int deltaT = (20*52840)/width;
-    // On coupe horizontalement
+
+    // On coupe horizontalement 
     int taskH = (height/ (nbp-1)) +2;
 
     
@@ -81,7 +82,7 @@ int main(int argc, char ** argv)
       unsigned long long temps = 0;
 
       int iterations = 0;
-      float total = 0;
+      float total = 0.0;
 
       std::chrono::time_point<std::chrono::system_clock> start, end;
       while (1) 
@@ -96,16 +97,16 @@ int main(int argc, char ** argv)
           end = std::chrono::system_clock::now();
 
           std::chrono::duration<double> elaps = end - start;
-          
-          iterations++;
-          total+= elaps.count()*1000;
 
+          iterations++;
+          total += elaps.count() * 1000;
+          
           temps += deltaT;
           std::cout << "Temps passe : "
                     << std::setw(10) << temps << " années" 
                     << std::fixed << std::setprecision(3)
                     << "  " << "|  CPU(ms) :  " << elaps.count()*1000
-                    << "  " << " Moyenne :  " << total/iterations
+                    << "  " << " Moyenne : " << total/iterations
                     << "\r" << std::flush;
           //_sleep(1000);
           if (SDL_PollEvent(&event) && event.type == SDL_QUIT) {
@@ -128,46 +129,53 @@ int main(int argc, char ** argv)
 
         std::vector<char> g_nextData;
         g_nextData.resize(taskH*width);
+        // std::vector<char> g_nextDataDown;
+        // g_nextDataDown.resize(taskH*width);
     
         while (1) {
           mise_a_jour(param, width, taskH, g.data(), g_next.data());
 
-          MPI_Status status;
+          
+
+          /////   ---- J'AI ESSAYÉ UNE AUTRE MÉTHODE, BIEN MOINS EFFICACE COMME PREVU. ---- 
           // ATTENTION AU DEADLOCK ( évités avec le % 2 )
-          if (rank == 1) {
-            MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 2, 0, globComm); // au rank 2 
-            MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, 2, 0, globComm, &status);
+          // MPI_Status status;
+          // if (rank == 1) {
+          //   MPI_Send(g_next.data(), g_nextDataDown.size(), MPI_CHAR, 2, 0, globComm); // au rank 2 
+          //   MPI_Recv(g_nextDataDown.data(), g_nextDataDown.size(), MPI_CHAR, 2, 0, globComm, &status);
 
-            g_next.replaceLine(g_nextData,taskH - 2);
-          } else if (rank == nbp-1) {
-            if (rank % 2 == 1) {
-              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm, &status);
-              MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm); // au rank nbp-2
-            } else {
-              MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm); // au rank nbp-2
-              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, nbp-2, 0, globComm, &status);
-            }
+          //   g_next.replaceLine(g_nextDataDown,taskH - 3);
+          // } else if (rank == nbp-1) {
+          //   if (rank % 2 == 1) {
+          //     MPI_Recv(g_nextDataUp.data(), g_nextDataUp.size(), MPI_CHAR, nbp-2, 0, globComm, &status);
+          //     MPI_Send(g_next.data(), g_nextDataUp.size(), MPI_CHAR, nbp-2, 0, globComm); // au rank nbp-2
+          //   } else {
+          //     MPI_Send(g_next.data(), g_nextDataUp.size(), MPI_CHAR, nbp-2, 0, globComm); // au rank nbp-2
+          //     MPI_Recv(g_nextDataUp.data(), g_nextDataUp.size(), MPI_CHAR, nbp-2, 0, globComm, &status);
+          //   }
 
-            g_next.replaceLine(g_nextData, 1);
-          } else {
-            if (rank % 2 == 1) {
-              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank-1, 0, globComm, &status); // rank n - 1
-              MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
-              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
-              MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
-            } else {
-              MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
-              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank-1, 0, globComm, &status); // rank n - 1
-              MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
-              MPI_Recv(g_nextData.data(), g_nextData.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
-            }
+          //   g_next.replaceLine(g_nextDataUp, 1);
+          // } else {
+          //   if (rank % 2 == 1) {
+          //     MPI_Recv(g_nextDataUp.data(), g_nextDataUp.size(), MPI_CHAR, rank-1, 0, globComm, &status); // rank n - 1
+          //     MPI_Send(g_next.data(), g_nextDataDown.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
+          //     MPI_Recv(g_nextDataDown.data(), g_nextDataDown.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
+          //     MPI_Send(g_next.data(), g_nextDataUp.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
+          //   } else {
+          //     MPI_Send(g_next.data(), g_nextDataDown.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
+          //     MPI_Recv(g_nextDataUp.data(), g_nextDataUp.size(), MPI_CHAR, rank-1, 0, globComm, &status); // rank n - 1
+          //     MPI_Send(g_next.data(), g_nextDataUp.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
+          //     MPI_Recv(g_nextDataDown.data(), g_nextDataDown.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
+          //   }
 
-            g_next.replaceLine(g_nextData, taskH -3);
-            g_next.replaceLine(g_nextData, 1);
-          }
+          //   g_next.replaceLine(g_nextDataDown, taskH -3);
+          //   g_next.replaceLine(g_nextDataUp, 1);
+          // }
+
+          
+          // MPI_Gather(g_next.data(), g_nextData.size(), g_nextData.data(), width*height, MPI_CHAR, 0, globComm) // Mettre aussi le gather dans le rank 0
           
           MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 0, 0, globComm);
-          // MPI_Gather(g_next.data(), g_nextData.size(), g_nextData.data(), width*height, MPI_CHAR, 0, globComm) // Mettre aussi le gather dans le rank 0
           g.swap(g_next);
         }
 
