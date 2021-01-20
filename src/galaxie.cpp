@@ -108,6 +108,13 @@ galaxie::updateByHBlocks(std::vector<char> data, int block, int nbp)
     // }
 }
 
+std::vector<char> galaxie::sub(int line) {
+    std::vector<char>::const_iterator first = m_planetes.begin() + line * m_height;
+    std::vector<char>::const_iterator last = m_planetes.begin() + (line+1)*m_height;
+    std::vector<char> newVec(first, last);
+    return newVec;
+}
+
 //# ############################################################################################## #
 
 galaxie_renderer::galaxie_renderer(SDL_Window* win)
