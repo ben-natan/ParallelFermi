@@ -139,47 +139,8 @@ int main(int argc, char ** argv)
         while (1) {
           mise_a_jour(param, width, taskH, g.data(), g_next.data());
 
-          /////   ---- J'AI ESSAYÉ UNE AUTRE MÉTHODE, BIEN MOINS EFFICACE COMME PREVU. ---- 
-          // ATTENTION AU DEADLOCK ( évités avec le % 2 )
-          // MPI_Status status;
-          // if (rank == 1) {
-          //   MPI_Send(g_next.data(), g_nextDataDown.size(), MPI_CHAR, 2, 0, globComm); // au rank 2 
-          //   MPI_Recv(g_nextDataDown.data(), g_nextDataDown.size(), MPI_CHAR, 2, 0, globComm, &status);
-
-          //   g_next.replaceLine(g_nextDataDown,taskH - 3);
-          // } else if (rank == nbp-1) {
-          //   if (rank % 2 == 1) {
-          //     MPI_Recv(g_nextDataUp.data(), g_nextDataUp.size(), MPI_CHAR, nbp-2, 0, globComm, &status);
-          //     MPI_Send(g_next.data(), g_nextDataUp.size(), MPI_CHAR, nbp-2, 0, globComm); // au rank nbp-2
-          //   } else {
-          //     MPI_Send(g_next.data(), g_nextDataUp.size(), MPI_CHAR, nbp-2, 0, globComm); // au rank nbp-2
-          //     MPI_Recv(g_nextDataUp.data(), g_nextDataUp.size(), MPI_CHAR, nbp-2, 0, globComm, &status);
-          //   }
-
-          //   g_next.replaceLine(g_nextDataUp, 1);
-          // } else {
-          //   if (rank % 2 == 1) {
-          //     MPI_Recv(g_nextDataUp.data(), g_nextDataUp.size(), MPI_CHAR, rank-1, 0, globComm, &status); // rank n - 1
-          //     MPI_Send(g_next.data(), g_nextDataDown.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
-          //     MPI_Recv(g_nextDataDown.data(), g_nextDataDown.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
-          //     MPI_Send(g_next.data(), g_nextDataUp.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
-          //   } else {
-          //     MPI_Send(g_next.data(), g_nextDataDown.size(), MPI_CHAR, rank+1, 0, globComm); // rank n + 1
-          //     MPI_Recv(g_nextDataUp.data(), g_nextDataUp.size(), MPI_CHAR, rank-1, 0, globComm, &status); // rank n - 1
-          //     MPI_Send(g_next.data(), g_nextDataUp.size(), MPI_CHAR, rank-1, 0, globComm); // rank n - 1
-          //     MPI_Recv(g_nextDataDown.data(), g_nextDataDown.size(), MPI_CHAR, rank+1, 0, globComm, &status); // rank n + 1
-          //   }
-
-          //   g_next.replaceLine(g_nextDataDown, taskH -3);
-          //   g_next.replaceLine(g_nextDataUp, 1);
-          // }
-
-          
-          // MPI_Gather(g_next.data(), g_nextData.size(), g_nextData.data(), width*height, MPI_CHAR, 0, globComm) // Mettre aussi le gather dans le rank 0
-          
           MPI_Send(g_next.data(), g_nextData.size(), MPI_CHAR, 0, 0, globComm);
-
-          
+ 
           // Envoi aux voisins
           MPI_Status status;
 
